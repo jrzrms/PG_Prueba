@@ -1,0 +1,6 @@
+{
+  "name": "FarmacoGen - Asistente de Farmacogenómica Clínica",
+  "description": "Herramienta técnica basada en el estudio Zhao et al. (2025) para la identificación de biomarcadores farmacogenéticos y recomendaciones CPIC en adultos mayores.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
