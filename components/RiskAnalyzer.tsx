@@ -32,12 +32,43 @@ const RiskAnalyzer: React.FC<RiskAnalyzerProps> = ({ selectedDrugs, onToggleDrug
     }, {} as Record<string, string[]>);
   }, []);
 
+  const removeAccents = (str: string) => {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  };
+
+  const handleFillTestData = () => {
+    setBulkText(
+      `- Clopidogrel 75 mg por la mañana\n` +
+      `- Atorvastatina 40 mg en la cena\n` +
+      `- Codeína 30 mg para el dolor\n` +
+      `- Paroxetina 20 mg por la noche`
+    );
+  };
+
   const handleProcessBulkText = () => {
     const foundDrugs: string[] = [];
+    const cleanText = removeAccents(bulkText).toLowerCase();
+
     availableDrugs.forEach(drug => {
-      // Búsqueda insensible a mayúsculas/minúsculas dentro del bloque de texto
-      const regex = new RegExp(`\\b${drug}\\b`, 'gi');
-      if (regex.test(bulkText)) {
+      const cleanDrug = removeAccents(drug).toLowerCase();
+      let pos = cleanText.indexOf(cleanDrug);
+      let matched = false;
+
+      while (pos !== -1) {
+        const charBefore = pos > 0 ? cleanText[pos - 1] : '';
+        const charAfter = pos + cleanDrug.length < cleanText.length ? cleanText[pos + cleanDrug.length] : '';
+        
+        const isBeforeWordChar = /[a-z0-9]/.test(charBefore);
+        const isAfterWordChar = /[a-z0-9]/.test(charAfter);
+        
+        if (!isBeforeWordChar && !isAfterWordChar) {
+          matched = true;
+          break;
+        }
+        pos = cleanText.indexOf(cleanDrug, pos + 1);
+      }
+
+      if (matched) {
         foundDrugs.push(drug);
       }
     });
@@ -99,7 +130,21 @@ const RiskAnalyzer: React.FC<RiskAnalyzerProps> = ({ selectedDrugs, onToggleDrug
           <div className="w-full flex flex-col min-h-[400px]">
             {showBulkInput ? (
               <div className="flex-grow flex flex-col animate-in fade-in slide-in-from-top-4 duration-500">
-                <label className="block text-xs font-black text-rose-600 mb-3 uppercase tracking-widest">Pegue el listado de medicación aquí</label>
+                <div className="flex justify-between items-center mb-3">
+                  <label className="block text-xs font-black text-rose-600 uppercase tracking-widest">
+                    Pegue el listado de medicación aquí
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleFillTestData}
+                    className="text-xs font-black text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1.5 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                    Cargar ejemplo de prueba
+                  </button>
+                </div>
                 <textarea 
                   className="flex-grow w-full p-6 text-slate-700 bg-white border-2 border-indigo-100 rounded-3xl focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300 shadow-inner font-mono text-sm"
                   placeholder="- Atorvastatina 40 mg/24h&#10;- Metformina 850 mg/24h&#10;- Paroxetina 20 mg/Noche..."
